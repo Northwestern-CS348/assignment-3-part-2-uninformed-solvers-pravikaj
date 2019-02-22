@@ -17,3 +17,30 @@ fact: (pred obj1 obj2)
 rule: ((pred obj1 obj2) (pred obj2 obj3)) -> (pred obj1 obj3)
 
 """
+fact: (movable tile2 pos2 pos1 pos2 pos2)
+fact: (movable tile8 pos1 pos2 pos2 pos2)
+fact: (movable tile6 pos2 pos3 pos2 pos2)
+fact: (movable tile4 pos3 pos2 pos2 pos2)
+
+fact: (position tile1 pos1 pos1)
+fact: (position tile2 pos2 pos1)
+fact: (position tile3 pos3 pos1)
+fact: (position tile4 pos3 pos2)
+fact: (position tile5 pos3 pos3)
+fact: (position tile6 pos2 pos3)
+fact: (position tile7 pos1 pos3)
+fact: (position tile8 pos1 pos2)
+fact: (position empt-1 pos2 pos2)
+
+rule: ((position ?tilex ?posa pos2) (position ?tiley ?posa ?posb)) -> (adjacent ?tilex ?tiley)
+rule: ((position ?tilex pos2 ?posa) (position ?tiley ?posb ?posa)) -> (adjacent ?tilex ?tiley)
+rule: ((position ?tilex ?posa ?posb) (position ?tiley ?posa pos2)) -> (adjacent ?tilex ?tiley)
+rule: ((position ?tilex ?posb ?posa) (position ?tiley pos2 ?posa)) -> (adjacent ?tilex ?tiley)
+
+rule: ((adjacent empt-1 ?tilex) (position empt-1 ?posa ?posb) (position ?tilex ?posc ?posd)) -> (movable ?tilex ?posc ?posd ?posa ?posb)
+rule: ((adjacent ?tilex empt-1) (position empt-1 ?posa ?posb) (position ?tilex ?posc ?posd)) -> (movable ?tilex ?posc ?posd ?posa ?posb)
+
+rule: ((position empt-1 ?posa pos2) (position ?tiley ?posa ?posb)) -> (movable ?tiley ?posa ?posb ?posa pos2)
+rule: ((position empt-1 pos2 ?posa) (position ?tiley ?posb ?posa)) -> (movable ?tiley ?posb ?posa pos2 ?posa)
+rule: ((position empt-1 ?posa ?posb) (position ?tiley ?posa pos2)) -> (movable ?tiley ?posa pos2 ?posa ?posb)
+rule: ((position empt-1 ?posb ?posa) (position ?tiley pos2 ?posa)) -> (movable ?tiley pos2 ?posa ?posb ?posa)

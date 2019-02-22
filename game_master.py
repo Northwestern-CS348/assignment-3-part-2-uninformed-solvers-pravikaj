@@ -38,7 +38,7 @@ class GameMaster(object):
         Returns:
              A Fact object that could be used to query the currently available moves
         """
-        raise NotImplementedError('Subclasses must override produceMovableQuery() '\
+        raise NotImplementedError('Subclasses must override produceMovableQuery() '
             'to provide the query for facts starting with MOVABLE predicate')
 
     def isMovableLegal(self, movable_statement):
@@ -55,7 +55,8 @@ class GameMaster(object):
 
     def makeMove(self, movable_statement):
         """
-        Takes a MOVABLE statement and makes the corresponding move. This will
+        Take
+        s a MOVABLE statement and makes the corresponding move. This will
         result in a change of the game state, and therefore requires updating
         the KB in the Game Master.
 

@@ -19,7 +19,12 @@ class SolverDFS(UninformedSolver):
             True if the desired solution state is reached, False otherwise
         """
         ### Student code goes here
-        return True
+        produceMovableQuery()
+        while True:
+            if self.gm.getMovables() is False:
+                return False
+
+
 
 
 class SolverBFS(UninformedSolver):
