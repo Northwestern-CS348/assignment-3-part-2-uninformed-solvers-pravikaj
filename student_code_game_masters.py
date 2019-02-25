@@ -34,34 +34,35 @@ class TowerOfHanoiGame(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### student code goes here
-        peg1List = []
-        peg2List = []
-        peg3List = []
-
+        peg1_list = []
+        peg2_list = []
+        peg3_list = []
         factpass1 = parse_input("fact: (on ?x peg1)")
+        factpass2 = parse_input("fact: (on ?x peg2)")
+        factpass3 = parse_input("fact: (on ?x peg3)")
+
         bindings1 = self.kb.kb_ask(factpass1)
         if bindings1:
             for i in bindings1:
-                peg1List.append(i[1][4:])
+                peg1_list.append(int(i.bindings_dict['?x'].replace('disk', '')))
 
-        factpass2 = parse_input("fact: (on ?x peg2)")
         bindings2 = self.kb.kb_ask(factpass2)
         if bindings2:
             for i in bindings2:
-                peg2List.append(i[1][4:])
+                peg2_list.append(int(i.bindings_dict['?x'].replace('disk', '')))
 
-        factpass3 = parse_input("fact: (on ?x peg3)")
         bindings3 = self.kb.kb_ask(factpass3)
         if bindings3:
             for i in bindings3:
-                peg3List.append(i[1][4:])
+                peg3_list.append(int(i.bindings_dict['?x'].replace('disk', '')))
 
-        peg1List.sort()
-        peg2List.sort()
-        peg3List.sort()
+        peg1_list.sort()
+        peg2_list.sort()
+        peg3_list.sort()
 
-        outputTuple = tuple((peg1List, peg2List, peg3List))
-        return outputTuple
+        output_list = [tuple(peg1_list), tuple(peg2_list), tuple(peg3_list)]
+        output_tuple = tuple(output_list)
+        return output_tuple
 
 
     def makeMove(self, movable_statement):
@@ -81,48 +82,70 @@ class TowerOfHanoiGame(GameMaster):
             None
         """
         # Student code goes here
-        terms = movable_statement.terms
-        disk = terms[0]
-        opeg = terms[1]
-        npeg = terms[2]
-
-        # RETRACT EMPTY PEG IF DISK MOVED TO AN EMPTY PEG
-        # = self.kb.getGameState()
-
-        # RULES
-        above_rule = parse_input("rule: ((on ?x ?a)(on ?y ?a)(smaller ?x ?y)) -> (above ?x ?y)")
-        move_top = parse_input("rule: ((top ?x ?a)(top ?y ?b)(smaller ?x ?y)) -> (movable ?x ?a ?b)")
-        move_empty = parse_input("rule: ((top ?x ?a)(empty ?b)) -> (movable ?x ?a ?b)")
-
-
-        above_fact = parse_input("fact: (above %(disk)s ?x)" % {'disk': disk})
-        above_bindings = self.kb.kb_ask(above_fact)
-        if above_bindings:
-            new_top = above_bindings[0][1]
-            assert_new_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': new_top, 'peg': opeg})
-            self.kb.kb_assert(assert_new_top)
-            retract_above = parse_input("fact: (above %(diska)s ?(diskb)s)" % {'diska': disk, 'diskb': new_top})
-            self.kb.kb_retract(retract_above)
+        # Check if move is legal in the first place
+        if not(self.isMovableLegal(movable_statement)):
+            pass
         else:
-            assert_empty = parse_input("fact: (empty %(peg)s)" % {'peg': opeg})
-            self.kb.kb_assert(assert_empty)
+            # match_help = self.produceMovableQuery()
+            # terms = match(movable_statement, match_help.statement)
+            # if terms:
+            #     disk = terms.bindings[0].constant
+            #     opeg = terms.bindings[1].constant
+            #     npeg = terms.bindings[2].constant
 
-        # ASSERT on and top for newly moved disk
-        assert_on = parse_input("fact: (on %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
-        assert_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
-        self.kb.kb_assert(assert_on)
-        self.kb.kb_assert(assert_top)
+                disk = str(movable_statement.terms[0])
+                opeg = str(movable_statement.terms[1])
+                npeg = str(movable_statement.terms[2])
 
-        # RETRACT on and top for newly moved disk
-        retract_on = parse_input("fact: (on %(disk)s %(peg)s)" % {'disk': disk, 'peg': opeg})
-        retract_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': disk, 'peg': opeg})
-        self.kb.kb_retract(retract_on)
-        self.kb.kb_retract(retract_top)
+                # RETRACT on and top for newly moved disk
+                retract_on = parse_input("fact: (on %(disk)s %(peg)s)" % {'disk': disk, 'peg': opeg})
+                retract_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': disk, 'peg': opeg})
+                self.kb.kb_retract(retract_on)
+                self.kb.kb_retract(retract_top)
 
-        # INFER new facts with the newly asserted facts
-        self.kb.ie.fc_infer(assert_on, above_rule, self.kb)
-        self.kb.ie.fc_infer(assert_top, move_top, self.kb)
-        self.kb.ie.fc_infer(assert_top, move_empty, self.kb)
+                #  Updating facts of Old Peg
+                onTopOf_fact = parse_input("fact: (onTopOf %(disk)s ?x)" % {'disk': disk})
+                oto_bindings = self.kb.kb_ask(onTopOf_fact)
+                if not oto_bindings:
+                    assert_empty = parse_input("fact: (empty %(peg)s)" % {'peg': opeg})
+                    self.kb.kb_assert(assert_empty)
+                else:
+                    new_top = oto_bindings[0].bindings_dict['?x']  # is this how you index into bindings?
+                    assert_new_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': new_top, 'peg': opeg})
+                    self.kb.kb_assert(assert_new_top)
+                    retract_onTopOf = parse_input("fact: (onTopOf %(diska)s %(diskb)s" % {'diska': disk, 'diskb': new_top})
+                    self.kb.kb_retract(retract_onTopOf)
+
+
+                #  Updating facts of Target Peg
+                empty_fact = parse_input("fact: (empty ?(newpeg)s" % {'newpeg': npeg})
+                empty_bindings = self.kb.kb_ask(empty_fact)
+                if empty_bindings:
+                    self.kb.kb_retract(empty_fact)
+
+                    # ASSERT on and top for newly moved disk
+                    assert_on = parse_input("fact: (on %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
+                    self.kb.kb_assert(assert_on)
+                    assert_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
+                    self.kb.kb_assert(assert_top)
+
+                else:
+                    #  Retract old top on target peg
+                    curr_top = parse_input("fact: (top ?x %(peg)s") % {'peg': npeg}
+                    old_top_bindings = self.kb.kb_ask(curr_top)
+                    old_top = old_top_bindings[0].bindings_dict['?x']
+                    retract_old_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': old_top, 'peg': npeg})
+                    self.kb.kb_retract(retract_old_top)
+
+                    #  Assert new OnTopOf
+                    new_oto = parse_input("fact: (onTopOf %(diska)s %(diskb)s)" % {'diska': disk, 'diskb': old_top})
+                    self.kb.kb_assert(new_oto)
+
+                    # ASSERT on and top for newly moved disk
+                    assert_on = parse_input("fact: (on %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
+                    self.kb.kb_assert(assert_on)
+                    assert_top = parse_input("fact: (top %(disk)s %(peg)s)" % {'disk': disk, 'peg': npeg})
+                    self.kb.kb_assert(assert_top)
 
 
 
@@ -171,33 +194,45 @@ class Puzzle8Game(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### Student code goes here
-
         row1 = []
         row2 = []
         row3 = []
-
         factpass1 = parse_input("fact: (position ?tilex ?posa pos1)")
+        factpass2 = parse_input("fact: (position ?tilex ?posa pos2)")
+        factpass3 = parse_input("fact: (position ?tilex ?posa pos3)")
+
         bindings1 = self.kb.kb_ask(factpass1)
         if bindings1:
             for i in bindings1:
-                row1.append(i[1].constant.element[4:])
+                row1.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
 
-        factpass2 = parse_input("fact: (position ?tilex ?posa pos2)")
         bindings2 = self.kb.kb_ask(factpass2)
         if bindings2:
             for i in bindings2:
-                row2.append(i[1].constant.element[4:])
+                row2.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
 
-        factpass3 = parse_input("fact: (position ?tilex ?posa pos3)")
         bindings3 = self.kb.kb_ask(factpass3)
         if bindings3:
             for i in bindings3:
-                row3.append(i[1].constant.element[4:])
+                row3.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
 
-        outputTuple = tuple((row1, row2, row3))
-        return outputTuple
+        output_list = [tuple(row1), tuple(row2), tuple(row3)]
+        output_tuple = tuple(output_list)
+        return output_tuple
 
 
+        # for i in rows:
+        #     row_list = []
+        #     factpass = parse_input("fact: (coordinate ?tilex ?posa pos%(rownum)s)" % {'rownum': i})
+        #     fact_binding = self.kb.kb_ask(factpass)
+        #     if fact_binding:
+        #         for j in fact_binding:
+        #             row_list.append(j[1][4:])
+        #     row_tuple = tuple(row_list)
+        #     output_list[i-1] = row_tuple
+        #
+        # output_tuple = tuple(output_list)
+        # return output_tuple
 
     def makeMove(self, movable_statement):
         """
@@ -216,29 +251,41 @@ class Puzzle8Game(GameMaster):
             None
         """
         ### Student code goes here
-        terms = movable_statement.terms
-        tile = terms[0]
-        oposx = terms[1]
-        oposy = terms[2]
-        nposx = terms[3]
-        nposy = terms[4]
+        if not self.isMovableLegal(movable_statement):
+            pass
+        else:
+            # match_help = self.produceMovableQuery()
+            # terms = match(movable_statement, match_help.statement)
+            #
+            # if terms:
+            #     tile = terms.bindings[0].constant
+            #     oposx = terms.bindings[1].constant
+            #     oposy = terms.bindings[2].constant
+            #     nposx = terms.bindings[3].constant
+            #     nposy = terms.bindings[4].constant
 
-        # ASSERT
-        assert_pos = parse_input("fact: (position %(tile)s %(posa)s %(posb)s"
-                                 % {'tile': tile,'posa': nposx, 'posb': nposy})
+            tile = str(movable_statement.terms[0])
+            oposx = str(movable_statement.terms[1])
+            oposy = str(movable_statement.terms[2])
+            nposx = str(movable_statement.terms[3])
+            nposy = str(movable_statement.terms[4])
 
-        assert_empty_pos = parse_input("fact: (position empt-1 %(posa)s %(posb)s"
-                                       % {'posa': oposx, 'posb': oposy})
-        self.kb.kb_assert(assert_pos)
-        self.kb.kb_assert(assert_empty_pos)
+            # RETRACT
+            retract_pos = parse_input("fact: (coordinate %(tile)s %(posa)s %(posb)s"
+                                      % {'tile': tile,'posa': oposx, 'posb': oposy})
+            retract_empty_pos = parse_input("fact: (coordinate tile-1 %(posa)s %(posb)s"
+                                            % {'posa': nposx, 'posb': nposy})
+            self.kb.kb_retract(retract_pos)
+            self.kb.kb_retract(retract_empty_pos)
 
-        # RETRACT
-        retract_pos = parse_input("fact: (position %(tile)s %(posa)s %(posb)s"
-                                  % {'tile': tile,'posa': oposx, 'posb': oposy})
-        retract_empty_pos = parse_input("fact: (position empt-1 %(posa)s %(posb)s"
-                                        % {'posa': nposx, 'posb': nposy})
-        self.kb.kb_retract(retract_pos)
-        self.kb.kb_retract(retract_empty_pos)
+            # ASSERT
+            assert_pos = parse_input("fact: (coordinate %(tile)s %(posa)s %(posb)s"
+                                     % {'tile': tile, 'posa': nposx, 'posb': nposy})
+
+            assert_empty_pos = parse_input("fact: (coordinate tile-1 %(posa)s %(posb)s"
+                                           % {'posa': oposx, 'posb': oposy})
+            self.kb.kb_assert(assert_pos)
+            self.kb.kb_assert(assert_empty_pos)
 
     def reverseMove(self, movable_statement):
         """
