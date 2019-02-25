@@ -29,6 +29,7 @@ class SolverDFS(UninformedSolver):
             self.visited[self.currentState] = True
             return self.currentState == self.victoryCondition
 
+        # GENERATE CHILDREN
         parent = self.currentState
         if not parent.children:
             moves_list = self.gm.getMovables()
@@ -45,6 +46,7 @@ class SolverDFS(UninformedSolver):
                         new_child.parent = parent
                         self.gm.reverseMove(m)
 
+        # Traverse Tree
         number_of_children = len(parent.children)
         while parent.nextChildToVisit < number_of_children:
             child = parent.children[parent.nextChildToVisit]
@@ -104,16 +106,54 @@ class SolverBFS(UninformedSolver):
             True if the desired solution state is reached, False otherwise
         """
         ### Student code goes here
-        pass
+        # CHECK VICTORY CONDITION
+        if self.currentState == self.victoryCondition:
+            return True
+        if self.currentState not in self.visited:
+            self.visited[self.currentState] = True
+            return self.currentState == self.victoryCondition
 
-        # while True:
-        #     # CHECK VICTORY CONDITION
-        #     if self.currentState == self.victoryCondition:
-        #         return True
-        #
-        #     #Generate Children
-        #     parent = self.currentState
-        #     moves_list = self.gm.getMovables()
-        #     depth = parent.depth + 1
-        #
-        #     if moves_list
+        # GENERATE CHILDREN
+        parent = self.currentState
+        if not parent.children:
+            moves_list = self.gm.getMovables()
+            if moves_list:
+                for m in moves_list:
+                    self.gm.makeMove(m)
+                    new_child = GameState(self.gm.getGameState, parent.depth+1, m)
+                    parent.children.append(new_child)
+                    new_child.parent = parent
+                    self.gm.reverseMove(m)
+
+        # Traverse Tree
+        self.BFS_Traverse()
+        return False
+
+    def BFS_Traverse(self):
+        state = self.currentState
+        # if node is anything but root node
+        while state.parent and self.last_child(state) is True:
+            self.gm.reverseMove(state.requiredMovable)
+            self.currentState = state.parent
+
+        if self.currentState.parent:  # if the parent exists
+            self.gm.reverseMove(self.currentState.requiredMovable)
+            self.currentState.nextChildToVisit += 1
+            self.currentState = self.currentState.parent.children[self.currentState.nextChildToVisit]
+            self.gm.makeMove(self.currentState.requiredMovable)
+
+        # when there are children still to visit
+        while self.visited.get(self.currentState, False) and self.currentState.children:
+            child_index = self.currentState.nextChildToVisit
+            self.currentState = self.currentState.children[child_index]
+            self.gm.makeMove(self.currentState.requiredMovable)
+        if self.visited.get(self.currentState, False):
+            self.BFS_Traverse()
+        return True
+
+    def last_child(self, state):
+        number_of_children = len(state.parent.children)
+        if number_of_children-1 == state.parent.children.index(state):
+            return True
+        else:
+            return False
