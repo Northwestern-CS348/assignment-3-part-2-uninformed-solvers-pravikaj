@@ -221,19 +221,6 @@ class Puzzle8Game(GameMaster):
         return output_tuple
 
 
-        # for i in rows:
-        #     row_list = []
-        #     factpass = parse_input("fact: (coordinate ?tilex ?posa pos%(rownum)s)" % {'rownum': i})
-        #     fact_binding = self.kb.kb_ask(factpass)
-        #     if fact_binding:
-        #         for j in fact_binding:
-        #             row_list.append(j[1][4:])
-        #     row_tuple = tuple(row_list)
-        #     output_list[i-1] = row_tuple
-        #
-        # output_tuple = tuple(output_list)
-        # return output_tuple
-
     def makeMove(self, movable_statement):
         """
         Takes a MOVABLE statement and makes the corresponding move. This will

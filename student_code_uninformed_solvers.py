@@ -23,69 +23,47 @@ class SolverDFS(UninformedSolver):
         # Student code goes here:
 
         # CHECK VICTORY CONDITION
-        if self.currentState == self.victoryCondition:
+        if self.currentState.state == self.victoryCondition:
             return True
         if self.currentState not in self.visited:
             self.visited[self.currentState] = True
-            return self.currentState == self.victoryCondition
 
         # GENERATE CHILDREN
-        parent = self.currentState
-        if not parent.children:
+        curr_state = self.currentState
+        if not curr_state.children:
             moves_list = self.gm.getMovables()
 
             if moves_list:
                 for m in moves_list:
                     self.gm.makeMove(m)
-                    new_game_state = self.gm.getGameState
-                    if parent.parent and new_game_state is parent.parent.state:
-                        self.gm.reverseMoveMove(m)
-                    else:
-                        new_child = GameState(new_game_state, parent.depth+1, m)
-                        parent.children.append(new_child)
-                        new_child.parent = parent
-                        self.gm.reverseMove(m)
+                    new_game_state = self.gm.getGameState()
+                    # if curr_state.parent and new_game_state is curr_state.state:
+                    #     self.gm.reverseMove(m)
+                    # else:
+                    new_child = GameState(new_game_state, curr_state.depth + 1, m)
+                    if new_child not in self.visited:
+                        curr_state.children.append(new_child)
+                        new_child.parent = curr_state
+                    self.gm.reverseMove(m)
 
-        # Traverse Tree
-        number_of_children = len(parent.children)
-        while parent.nextChildToVisit < number_of_children:
-            child = parent.children[parent.nextChildToVisit]
-            parent.nextChildToVisit += 1
-            if child not in self.visited:
+        # TRAVERSE TREE
+        self.DFS_Traverse()
+        print(self.currentState.state)
+
+    def DFS_Traverse(self):
+        number_of_children = len(self.currentState.children)
+        while self.currentState.parent is not None and self.currentState.nextChildToVisit == number_of_children:
+            self.gm.reverseMove(self.currentState.requiredMovable)
+            self.currentState = self.currentState.parent
+
+        if self.currentState.nextChildToVisit < number_of_children:
+            child = self.currentState.children[self.currentState.nextChildToVisit]
+            self.currentState.nextChildToVisit += 1
+            if child in self.visited:
+                self.DFS_Traverse()
+            else:
                 self.gm.makeMove(child.requiredMovable)
                 self.currentState = child
-                self.visited[self.currentState] = True
-            if child == self.victoryCondition:
-                return True
-            elif child != self.victoryCondition:
-                return False
-            else:
-                self.gm.reverseMove(self.currentState.requiredMovable)
-                self.currentState = self.currentState.parent
-
-        # self.DFS_Traverse(parent)
-
-
-    # def DFS_Traverse(self, parent):
-    #     number_of_children = len(parent.children)
-    #     children_length = range(parent.nextChildToVisit, number_of_children)
-    #     for i in children_length:
-    #         # child_index = parent.nextChildToVisit
-    #         child = parent.children[i]
-    #         if child not in self.visited:
-    #             parent.nextChildToVisit = i
-    #             self.gm.makeMove(child.requiredMovable)
-    #             self.currentState = child
-    #             self.visited[self.currentState] = True
-    #             break
-    #
-    #     if self.currentState.state == self.victoryCondition:
-    #         return True
-    #     else:
-    #         self.gm.reverseMove(self.currentState.requiredMovable)
-    #         self.currentState = self.currentState.parent
-    #         self.solveOneStep()
-
 
 
 class SolverBFS(UninformedSolver):

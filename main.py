@@ -37,7 +37,7 @@ class KBTest(unittest.TestCase):
         """
         solver.solve()
 
-    def runPlayXSteps(self, solver, plays, timeout=5):
+    def runPlayXSteps(self, solver, plays, timeout=500000):
         """
         Wrapper function; calls playXSteps(..) with a timeout
 
@@ -54,7 +54,7 @@ class KBTest(unittest.TestCase):
         except TimeoutError:
             raise Exception("Timed out: %s" % inspect.stack()[1][3])
 
-    def runSolve(self, solver, timeout=5):
+    def runSolve(self, solver, timeout=5000000):
         """
         Wrapper function; calls solve(..) with a timeout
 
