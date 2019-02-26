@@ -85,7 +85,7 @@ class SolverBFS(UninformedSolver):
         """
         ### Student code goes here
         # CHECK VICTORY CONDITION
-        if self.currentState == self.victoryCondition:
+        if self.currentState.state == self.victoryCondition:
             return True
         if self.currentState not in self.visited:
             self.visited[self.currentState] = True
@@ -98,7 +98,7 @@ class SolverBFS(UninformedSolver):
             if moves_list:
                 for m in moves_list:
                     self.gm.makeMove(m)
-                    new_child = GameState(self.gm.getGameState, parent.depth+1, m)
+                    new_child = GameState(self.gm.getGameState(), parent.depth+1, m)
                     parent.children.append(new_child)
                     new_child.parent = parent
                     self.gm.reverseMove(m)
@@ -108,24 +108,23 @@ class SolverBFS(UninformedSolver):
         return False
 
     def BFS_Traverse(self):
-        state = self.currentState
         # if node is anything but root node
-        while state.parent and self.last_child(state) is True:
-            self.gm.reverseMove(state.requiredMovable)
-            self.currentState = state.parent
+        while self.currentState.parent and self.last_child(self.currentState) is True:
+            self.gm.reverseMove(self.currentState.requiredMovable)
+            self.currentState = self.currentState.parent
 
-        if self.currentState.parent:  # if the parent exists
+        if self.currentState.parent:  # if the parent exists and move to next child
             self.gm.reverseMove(self.currentState.requiredMovable)
             self.currentState.nextChildToVisit += 1
             self.currentState = self.currentState.parent.children[self.currentState.nextChildToVisit]
             self.gm.makeMove(self.currentState.requiredMovable)
 
         # when there are children still to visit
-        while self.visited.get(self.currentState, False) and self.currentState.children:
+        while self.visited[self.currentState] is not True and self.currentState.children:
             child_index = self.currentState.nextChildToVisit
             self.currentState = self.currentState.children[child_index]
             self.gm.makeMove(self.currentState.requiredMovable)
-        if self.visited.get(self.currentState, False):
+        if self.visited[self.currentState] is not True:
             self.BFS_Traverse()
         return True
 

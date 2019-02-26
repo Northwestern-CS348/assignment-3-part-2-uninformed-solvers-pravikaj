@@ -194,27 +194,33 @@ class Puzzle8Game(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### Student code goes here
-        row1 = []
-        row2 = []
-        row3 = []
-        factpass1 = parse_input("fact: (position ?tilex ?posa pos1)")
-        factpass2 = parse_input("fact: (position ?tilex ?posa pos2)")
-        factpass3 = parse_input("fact: (position ?tilex ?posa pos3)")
+        # List is filled with filler values
+        row1 = [2, 2, 2]
+        row2 = [2, 2, 2]
+        row3 = [2, 2, 2]
+        factpass1 = parse_input("fact: (coordinate ?tilex ?posa pos1)")
+        factpass2 = parse_input("fact: (coordinate ?tilex ?posa pos2)")
+        factpass3 = parse_input("fact: (coordinate ?tilex ?posa pos3)")
 
         bindings1 = self.kb.kb_ask(factpass1)
         if bindings1:
             for i in bindings1:
-                row1.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
+                column_num = (int(i.bindings_dict['?posa'].replace('pos', ''))) - 1
+                row1[column_num] = int(i.bindings_dict['?tilex'].replace('tile', ''))
+                # row1.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
+
 
         bindings2 = self.kb.kb_ask(factpass2)
         if bindings2:
             for i in bindings2:
-                row2.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
+                column_num = (int(i.bindings_dict['?posa'].replace('pos', ''))) - 1
+                row2[column_num] = int(i.bindings_dict['?tilex'].replace('tile', ''))
 
         bindings3 = self.kb.kb_ask(factpass3)
         if bindings3:
             for i in bindings3:
-                row3.append(int(i.bindings_dict['?tilex'].replace('tile', '')))
+                column_num = (int(i.bindings_dict['?posa'].replace('pos', ''))) - 1
+                row3[column_num] = int(i.bindings_dict['?tilex'].replace('tile', ''))
 
         output_list = [tuple(row1), tuple(row2), tuple(row3)]
         output_tuple = tuple(output_list)
